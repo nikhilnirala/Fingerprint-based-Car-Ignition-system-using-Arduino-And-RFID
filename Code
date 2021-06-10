@@ -1,0 +1,126 @@
+#include <Adafruit_Fingerprint.h>
+#include <LiquidCrystal.h>
+char input[12];
+int count = 0;
+int a = 0;
+const int rs = 6, en = 7, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+SoftwareSerial mySerial(12,11);
+Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
+void setup()
+{
+  pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
+  digitalWrite(9,LOW);
+  digitalWrite(10,LOW);
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  lcd.setCursor(0, 0);
+  lcd.print("   WELCOME TO       ");
+  lcd.setCursor(0, 1);
+  lcd.print("  CIRCUIT DIGEST       ");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Please swipe           ");
+  lcd.setCursor(0, 1);
+  lcd.print("Your License          ");
+}
+void loop()
+{
+  if (Serial.available())
+  {
+    count = 0;
+    while (Serial.available() && count < 12)
+    {
+      input[count] = Serial.read();
+      count++;
+      delay(5);
+    }
+    if (count == 12)
+    {
+      if ((strncmp(input, "3F009590566C", 12) == 0) && (a == 0))
+      {
+        lcd.setCursor(0, 0);
+        lcd.print("License Valid         ");
+        lcd.setCursor(0, 1);
+        lcd.print("Welcome               ");
+        delay(1000);
+        a = 1;
+        fingerprint();
+      }
+      else if ((strncmp(input, "0B0028883E95", 12) == 0) && (a == 0))
+      {
+        lcd.setCursor(0, 0);
+        lcd.print("License Valid         ");
+        lcd.setCursor(0, 1);
+        lcd.print("Welcome                ");
+        delay(1000);
+        a = 1;
+        fingerprint();
+      }
+      else
+      {
+        if (a != 1)
+        {
+          lcd.setCursor(0, 0);
+          lcd.print("License Invalid         ");
+          lcd.setCursor(0, 1);
+          lcd.print("Try Again!!!            ");
+          delay(2000);
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("Please swipe           ");
+          lcd.setCursor(0, 1);
+          lcd.print("Your License          ");
+        }
+      }
+    }
+  }
+}
+int getFingerprintID()
+{
+  uint8_t p = finger.getImage();
+  if (p != FINGERPRINT_OK)  return -1;
+  p = finger.image2Tz();
+  if (p != FINGERPRINT_OK)  return -1;
+  p = finger.fingerFastSearch();
+  if (p != FINGERPRINT_OK)  return -1;
+  return finger.fingerID;
+}
+void fingerprint()
+{
+  finger.begin(57600);
+        while(a==1)
+        {
+        int fingerprintID = getFingerprintID();
+        delay(50);
+        if (fingerprintID == 1)
+        {
+          lcd.setCursor(0, 0);
+          lcd.print("Access Granted        ");
+          lcd.setCursor(0, 1);
+          lcd.print("Vehicle Started       ");
+          digitalWrite(9,HIGH);
+          digitalWrite(10,LOW);
+          while(1);
+        }
+        else if (fingerprintID == 2)
+        {
+          lcd.setCursor(0, 0);
+          lcd.print("Access Granted        ");
+          lcd.setCursor(0, 1);
+          lcd.print("Vehicle Started       ");
+          digitalWrite(9,HIGH);
+          digitalWrite(10,LOW);
+          while(1);
+        }
+        else
+        {
+          lcd.setCursor(0, 0);
+          lcd.print("Pls Place a        ");
+          lcd.setCursor(0, 1);
+          lcd.print("Valid Finger       ");
+        }
+        }
+}
